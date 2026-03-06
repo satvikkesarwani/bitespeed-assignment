@@ -1,61 +1,82 @@
 # Bitespeed Identity Reconciliation Task
 
-This is the backend service designed to keep track of a customer's identity across multiple purchases by linking different orders made with different contact information (Email and Phone Number) to the same person.
+A complete full-stack web service and UI designed to keep track of a customer's identity across multiple purchases by linking different orders made with different contact information (Email and Phone Number) to the same person.
+
+![Frontend Preview](https://via.placeholder.com/800x400.png?text=FluxKart+Identity+Reconciliation+UI)
 
 ## Technology Stack
 
+### Backend
 - **Node.js**: JavaScript Runtime
-- **Express**: Web Web Framework for Node
+- **Express**: Web Framework for Node
 - **TypeScript**: Static typing for JavaScript
-- **PostgreSQL**: Relational Database
+- **SQLite**: Relational Database for Zero-Dependency Local Testing
 - **Prisma**: Next generation Node.js and TypeScript ORM
 
-## Prerequisites
+### Frontend
+- **React**: Modern View Library
+- **Vite**: Ultra-fast build tool
+- **Lucide-React**: Beautiful SVG icons
+- **CSS**: Pure Vanilla CSS featuring glassmorphism and modern UI aesthetics
 
-- Node.js installed
-- A running instance of PostgreSQL (Docker Compose file is included)
-
-## Database Setup
-
-*This project expects a Postgres database.*
-1. Create a `.env` file in the `backend` directory (a `.env.example` will be provided).
-2. Configure your `DATABASE_URL` with your postgres connection string.
-
-If you have Docker available, you can spin up the required PostgreSQL database using the included `docker-compose.yml`:
-```bash
-docker-compose up -d
+## Project Structure
+```
+bitespeed-assignment/
+├── backend/               # Express + Prisma API
+│   ├── src/index.ts       # Core /identify logic for Phase 2 & 3
+│   ├── prisma/            # SQLite database and schema
+│   └── package.json
+└── frontend/              # Vite + React Interface
+    ├── src/App.tsx        # UI & API Integration
+    ├── src/index.css      # Custom UI Styling
+    └── package.json
 ```
 
-Navigate to the `backend` folder to push the Prisma schema and create the tables:
+## Running the Application Locally (Zero Dependencies!)
+
+We mapped the local environment to use **SQLite** so that you can run and test the database logic without needing Docker or a live PostgreSQL URL.
+
+### 1. Start the Backend API
+
+Open a terminal window and navigate to the backend folder:
 ```bash
 cd backend
+
+# Install all backend dependencies
+npm install
+
+# Push the schema to the local SQLite database
 npx prisma db push
+
+# Generate the Prisma client
+npx prisma generate
+
+# Start the dev server (runs on port 3000)
+npm run dev
 ```
 
-## Running the Application
+### 2. Start the Frontend UI
 
-In the `backend` directory:
+Open a *second* terminal window and navigate to the frontend folder:
+```bash
+cd frontend
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+# Install all frontend dependencies
+npm install
 
-2. Run the development server (uses `ts-node-dev` for hot-reloading):
-   ```bash
-   npm run dev
-   ```
+# Start the React Vite app (usually runs on port 5173)
+npm run dev
+```
 
-The server should now be running on `http://localhost:3000`.
+Navigate to the `localhost` URL provided by Vite in your browser to interact with the beautifully designed Identity Reconciliation tester!
 
-## Endpoints
+## Features
 
-### `GET /ping`
-Check if the server is healthy.
+- **Phase 1**: Full project intialization, Prisma modeling, and health endpoints.
+- **Phase 2 Implementation**: Correctly identifies entirely new customers and creates primary contacts. Returns unified matches when exact existing keys are passed.
+- **Phase 3 Implementation**: Handles complex consolidation. If a new phone number pairs with an existing email, it seamlessly generates a `secondary` contact linked to the `primary`. Can absorb newer overlapping primaries into older primaries.
+- **Phase 4 Implementation**: A modern, sleek glassmorphic frontend utilizing React to display arrays of Linked Emails, Linked Phones, and Secondary IDs dynamically.
 
-### `POST /identify`
-... to be implemented in Phase 2
+## Developer
 
-## Phase Strategy
-
-This project is being completed in a 5 Phase approach. Currently, **Phase 1 (Project Initialization & Database Setup)** is complete.
+Developed with extreme love and precision for the Bitespeed software engineering challenge.
