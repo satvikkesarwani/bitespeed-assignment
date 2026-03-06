@@ -109,19 +109,31 @@ export default function App() {
       // Send combined phone number - backend will normalize further but we send sanitized digits
       const combinedPhone = phone ? `${countryCode}${numericPhone}` : null;
 
-      // Use a type-cast to bypass potential TS errors on the server build
-      // Also use hostname check as a fail-safe environment detector
+      // --- DIAGNOSTIC LOGGING ---
       const meta = import.meta as any;
       const isProd = meta.env?.PROD || window.location.hostname !== 'localhost';
       const apiUrl = isProd ? '/identify' : 'http://localhost:3000/identify';
+
+      console.log("[DEBUG] Env Detection:", {
+        hostname: window.location.hostname,
+        isProd,
+        apiUrl,
+        mode: meta.env?.MODE
+      });
+      console.log("[DEBUG] Request Payload:", { email, phoneNumber: combinedPhone });
 
       const response = await axios.post(apiUrl, {
         email: email || null,
         phoneNumber: combinedPhone
       });
+      console.log("[DEBUG] Server Response Success:", response.data);
       setResult(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to connect to the server');
+      console.error("[DEBUG] Request Failed:", err);
+      const detailedError = err.response
+        ? `Server Error (${err.response.status}): ${JSON.stringify(err.response.data)}`
+        : `Network Error: ${err.message}. Check if backend is running on EC2.`;
+      setError(detailedError);
     } finally {
       setLoading(false);
     }
