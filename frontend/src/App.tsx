@@ -105,23 +105,21 @@ export default function App() {
     setError('');
     setResult(null);
 
+    // --- DIAGNOSTIC LOGGING & PAYLOAD SETUP ---
+    const combinedPhone = phone ? `${countryCode}${numericPhone}` : null;
+    const meta = import.meta as any;
+    const isProd = meta.env?.PROD || window.location.hostname !== 'localhost';
+    const apiUrl = isProd ? '/identify' : 'http://localhost:3000/identify';
+
+    console.log("[DEBUG] Env Detection:", {
+      hostname: window.location.hostname,
+      isProd,
+      apiUrl,
+      mode: meta.env?.MODE
+    });
+    console.log("[DEBUG] Request Payload:", { email, phoneNumber: combinedPhone });
+
     try {
-      // Send combined phone number - backend will normalize further but we send sanitized digits
-      const combinedPhone = phone ? `${countryCode}${numericPhone}` : null;
-
-      // --- DIAGNOSTIC LOGGING ---
-      const meta = import.meta as any;
-      const isProd = meta.env?.PROD || window.location.hostname !== 'localhost';
-      const apiUrl = isProd ? '/identify' : 'http://localhost:3000/identify';
-
-      console.log("[DEBUG] Env Detection:", {
-        hostname: window.location.hostname,
-        isProd,
-        apiUrl,
-        mode: meta.env?.MODE
-      });
-      console.log("[DEBUG] Request Payload:", { email, phoneNumber: combinedPhone });
-
       const response = await axios.post(apiUrl, {
         email: email || null,
         phoneNumber: combinedPhone
@@ -142,14 +140,6 @@ export default function App() {
         errorMsg = `Request Error: ${err.message}`;
       }
       setError(errorMsg);
-    } finally {
-Line 137: TargetContent:
-    } catch (err: any) {
-      console.error("[DEBUG] Request Failed:", err);
-      const detailedError = err.response
-        ? `Server Error (${err.response.status}): ${JSON.stringify(err.response.data)}`
-        : `Network Error: ${err.message}. Check if backend is running on EC2.`;
-      setError(detailedError);
     } finally {
       setLoading(false);
     }
