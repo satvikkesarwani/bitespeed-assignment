@@ -72,11 +72,14 @@ Navigate to the `localhost` URL provided by Vite in your browser to interact wit
 
 ## Features
 
-- **Phase 1**: Full project intialization, Prisma modeling, and health endpoints.
-- **Phase 2 Implementation**: Correctly identifies entirely new customers and creates primary contacts. Returns unified matches when exact existing keys are passed.
-- **Phase 3 Implementation**: Handles complex consolidation. If a new phone number pairs with an existing email, it seamlessly generates a `secondary` contact linked to the `primary`. Can absorb newer overlapping primaries into older primaries.
-- **Phase 4 Implementation**: A modern, sleek glassmorphic frontend utilizing React to display arrays of Linked Emails, Linked Phones, and Secondary IDs dynamically.
+- **Phase 1-3 Core Engine**: Robust Identity Reconciliation logic that handles creation, linking, and complex primary-demotion/secondary-relinking cases. 100% compliant with the Bitespeed technical spec.
+- **Spec-Perfect Responses**: JSON responses strictly follow the `primaryContactId` naming and ensure the primary identifier is always the first element in the email and phone arrays.
+- **Strict Validation (Phase 8)**: Both frontend and backend enforce a **10-digit numeric** constraint for phone numbers and an **@gmail.com** constraint for emails.
+- **Enabled/Disabled Logic**: The "Identify Contact" UI button is intelligently enabled only when both fields are correctly populated.
+- **Normalization (Phase 7)**: Backend logic automatically strips non-numeric characters from phone numbers for consistent cluster matching.
+- **Professional UI**: A centered, modern white theme with a searchable, high-contrast world-country selector (50+ countries).
+- **Maintenance Tools**: Includes `reset_db.ts` to clear all records and `normalize_existing_data.ts` for sanitizing legacy records.
 
 ## Developer
 
-Developed with extreme love and precision for the Bitespeed software engineering challenge.
+Developed with precision and care for the Bitespeed Backend Challenge.
