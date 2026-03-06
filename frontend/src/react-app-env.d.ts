@@ -3,7 +3,7 @@
 /// <reference types="react-dom" />
 
 declare namespace NodeJS {
-  interface Process{
+  interface Process {
     env: ProcessEnv
   }
   interface ProcessEnv {
@@ -43,8 +43,8 @@ declare module '*.png' {
 }
 
 declare module '*.webp' {
-    const src: string
-    export default src
+  const src: string
+  export default src
 }
 
 declare module '*.svg' {
@@ -71,4 +71,16 @@ declare module '*.module.scss' {
 declare module '*.module.sass' {
   const classes: { readonly [key: string]: string }
   export default classes
+}
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string
+  readonly MODE: string
+  readonly DEV: boolean
+  readonly PROD: boolean
+  readonly SSR: boolean
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
 }
