@@ -109,8 +109,10 @@ export default function App() {
       // Send combined phone number - backend will normalize further but we send sanitized digits
       const combinedPhone = phone ? `${countryCode}${numericPhone}` : null;
 
-      // Use relative path '/identify' in production to work with Nginx proxy
-      const isProd = import.meta.env.PROD;
+      // Use a type-cast to bypass potential TS errors on the server build
+      // Also use hostname check as a fail-safe environment detector
+      const meta = import.meta as any;
+      const isProd = meta.env?.PROD || window.location.hostname !== 'localhost';
       const apiUrl = isProd ? '/identify' : 'http://localhost:3000/identify';
 
       const response = await axios.post(apiUrl, {
