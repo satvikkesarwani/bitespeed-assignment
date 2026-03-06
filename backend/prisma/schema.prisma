@@ -17,6 +17,9 @@ model Contact {
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
+  @@index([email])
+  @@index([phoneNumber])
+
   // Relations
   primaryContact  Contact?  @relation("LinkedContacts", fields: [linkedId], references: [id])
   secondaryContacts Contact[] @relation("LinkedContacts")

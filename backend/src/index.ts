@@ -1,10 +1,32 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(morgan('dev'));
+
+// Helper to sanitize phone numbers
+const normalizePhone = (phone: string | null): string | null => {
+    if (!phone) return null;
+    // Strip all non-numeric characters
+    return phone.replace(/\D/g, '');
+};
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window`
+    message: { error: 'Too many requests from this IP, please try again later.' }
+});
+
+app.use(limiter);
 
 app.use(cors());
 app.use(express.json());
@@ -18,14 +40,29 @@ app.get('/ping', (req: Request, res: Response) => {
 app.post('/identify', async (req: Request, res: Response) => {
     try {
         const { email, phoneNumber } = req.body;
-        const phoneStr = phoneNumber ? String(phoneNumber) : null;
 
-        // Validate request
-        if (!email && !phoneStr) {
-            return res.status(400).json({ error: 'Either email or phoneNumber must be provided' });
+        // Normalize input
+        const rawPhone = (phoneNumber !== undefined && phoneNumber !== null) ? String(phoneNumber) : null;
+        const phoneDigits = rawPhone ? rawPhone.replace(/\D/g, '') : null;
+
+        // Strict Backend Validation Guard
+        if (rawPhone && rawPhone.length > 0 && (!/^\d+$/.test(phoneDigits!) || phoneDigits!.length < 1)) {
+            return res.status(400).json({ error: 'Invalid phone number format. Numbers only are allowed.' });
         }
 
-        // Find all matching contacts containing either the email or phone number
+        const phoneStr = phoneDigits;
+
+        // Validate request strictly
+        if (!email && !phoneStr) {
+            return res.status(400).json({ error: 'Either email or a valid numeric phoneNumber must be provided in the payload' });
+        }
+
+        // Gmail restriction
+        if (email && !email.toLowerCase().endsWith('@gmail.com')) {
+            return res.status(400).json({ error: 'Only @gmail.com addresses are allowed' });
+        }
+
+        // Find all matching contacts -- since we normalize on storage, we can search by exact normalized string
         const matchingContacts = await prisma.contact.findMany({
             where: {
                 OR: [
@@ -48,7 +85,7 @@ app.post('/identify', async (req: Request, res: Response) => {
 
             return res.status(200).json({
                 contact: {
-                    primaryContatctId: newContact.id,
+                    primaryContactId: newContact.id,
                     emails: newContact.email ? [newContact.email] : [],
                     phoneNumbers: newContact.phoneNumber ? [newContact.phoneNumber] : [],
                     secondaryContactIds: []
@@ -101,27 +138,7 @@ app.post('/identify', async (req: Request, res: Response) => {
             }
         }
 
-        // 3. Check for new information that requires a New Secondary Contact
-        // E.g., The incoming request has a new email paired with an existing phone, or vice-versa.
-        const matchEmails = matchingContacts.map(c => c.email).filter(Boolean);
-        const matchPhones = matchingContacts.map(c => c.phoneNumber).filter(Boolean);
-
-        const isNewEmail = email && !matchEmails.includes(email);
-        const isNewPhone = phoneStr && !matchPhones.includes(phoneStr);
-
-        if (isNewEmail || isNewPhone) {
-            await prisma.contact.create({
-                data: {
-                    email: email || null,
-                    phoneNumber: phoneStr || null,
-                    linkPrecedence: 'secondary',
-                    linkedId: oldestPrimary.id
-                }
-            });
-        }
-
-        // 4. Construct Final Response Payload
-        // Re-fetch the entire consolidated cluster for the oldest primary
+        // 3. Fetch the entire consolidated cluster for the oldest primary to verify duplicates
         const clusterContacts = await prisma.contact.findMany({
             where: {
                 OR: [
@@ -129,13 +146,38 @@ app.post('/identify', async (req: Request, res: Response) => {
                     { linkedId: oldestPrimary.id }
                 ]
             },
-            orderBy: { createdAt: 'asc' } // Oldest first ensures primary email/phone leads the arrays
+            orderBy: { createdAt: 'asc' }
         });
 
-        // Collect unique values, maintaining order (Primary's info appears first naturally)
+        const clusterEmails = new Set(clusterContacts.map(c => c.email).filter(Boolean));
+        const clusterPhones = new Set(clusterContacts.map(c => c.phoneNumber).filter(Boolean));
+
+        // 4. Check for new information that requires a New Secondary Contact
+        // Validate against the ENTIRE cluster, not just the original search matches.
+        const isNewEmail = email && !clusterEmails.has(email);
+        const isNewPhone = phoneStr && !clusterPhones.has(phoneStr);
+
+        if (isNewEmail || isNewPhone) {
+            const addedSecondary = await prisma.contact.create({
+                data: {
+                    email: email || null,
+                    phoneNumber: phoneStr || null,
+                    linkPrecedence: 'secondary',
+                    linkedId: oldestPrimary.id
+                }
+            });
+            clusterContacts.push(addedSecondary);
+        }
+
+        // 5. Construct Final Response Payload
+        // Collect unique values, ensuring the primary contact's info is FIRST
         const emailsSet = new Set<string>();
         const phonesSet = new Set<string>();
         const secondaryIds: number[] = [];
+
+        // Add primary info first as per spec
+        if (oldestPrimary.email) emailsSet.add(oldestPrimary.email);
+        if (oldestPrimary.phoneNumber) phonesSet.add(oldestPrimary.phoneNumber);
 
         for (const contact of clusterContacts) {
             if (contact.email) emailsSet.add(contact.email);
@@ -147,7 +189,7 @@ app.post('/identify', async (req: Request, res: Response) => {
 
         return res.status(200).json({
             contact: {
-                primaryContatctId: oldestPrimary.id,
+                primaryContactId: oldestPrimary.id,
                 emails: Array.from(emailsSet),
                 phoneNumbers: Array.from(phonesSet),
                 secondaryContactIds: secondaryIds
