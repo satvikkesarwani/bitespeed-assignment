@@ -70,6 +70,42 @@ npm run dev
 
 Navigate to the `localhost` URL provided by Vite in your browser to interact with the beautifully designed Identity Reconciliation tester!
 
+## API Specification
+
+The core logic is exposed through a single POST endpoint for identity reconciliation.
+
+### Endpoint: `POST /identify`
+
+**Hosted URL**: `[Insert your Render/Deployment URL here]/identify`  
+**Local URL**: `http://localhost:3000/identify`
+
+#### Request Body (JSON)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `email` | `string?` | Optional (Mandatory if `phoneNumber` is null). Must be `@gmail.com`. |
+| `phoneNumber` | `string\|number?` | Optional (Mandatory if `email` is null). Will be normalized to 10 digits. |
+
+```json
+{
+  "email": "mabe@gmail.com",
+  "phoneNumber": "9005629577"
+}
+```
+
+#### Response Body (JSON)
+```json
+{
+  "contact": {
+    "primaryContactId": 1,
+    "emails": ["mabe@gmail.com", "mabe2@gmail.com"],
+    "phoneNumbers": ["9005629577", "9794182032"],
+    "secondaryContactIds": [2, 3]
+  }
+}
+```
+
+---
+
 ## Features
 
 - **Phase 1-3 Core Engine**: Robust Identity Reconciliation logic that handles creation, linking, and complex primary-demotion/secondary-relinking cases. 100% compliant with the Bitespeed technical spec.
