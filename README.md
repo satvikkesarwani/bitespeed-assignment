@@ -87,24 +87,7 @@ The core logic is exposed through a single POST endpoint for identity reconcilia
 | `email` | `string?` | Optional (Mandatory if `phoneNumber` is null). Must be `@gmail.com`. |
 | `phoneNumber` | `string\|number?` | Optional (Mandatory if `email` is null). Will be normalized to 10 digits. |
 
-```json
-{
-  "email": "mabe@gmail.com",
-  "phoneNumber": "9005629577"
-}
-```
 
-#### Response Body (JSON)
-```json
-{
-  "contact": {
-    "primaryContactId": 1,
-    "emails": ["mabe@gmail.com", "mabe2@gmail.com"],
-    "phoneNumbers": ["9005629577", "9794182032"],
-    "secondaryContactIds": [2, 3]
-  }
-}
-```
 
 ---
 
