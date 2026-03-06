@@ -109,7 +109,8 @@ export default function App() {
       // Send combined phone number - backend will normalize further but we send sanitized digits
       const combinedPhone = phone ? `${countryCode}${numericPhone}` : null;
 
-      const response = await axios.post('http://localhost:3000/identify', {
+      const apiUrl = import.meta.env.PROD ? '/identify' : 'http://localhost:3000/identify';
+      const response = await axios.post(apiUrl, {
         email: email || null,
         phoneNumber: combinedPhone
       });
