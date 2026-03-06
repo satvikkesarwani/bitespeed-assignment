@@ -129,6 +129,22 @@ export default function App() {
       console.log("[DEBUG] Server Response Success:", response.data);
       setResult(response.data);
     } catch (err: any) {
+      console.error("[DEBUG] Request Failed (Deep Trace):", err);
+      let errorMsg = "";
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        errorMsg = `Server Error (${err.response.status}): ${JSON.stringify(err.response.data)}`;
+      } else if (err.request) {
+        // The request was made but no response was received
+        errorMsg = `Network Error (No response): The backend at ${apiUrl} did not respond. Check if backend is running on EC2. Hostname: ${window.location.hostname}`;
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        errorMsg = `Request Error: ${err.message}`;
+      }
+      setError(errorMsg);
+    } finally {
+Line 137: TargetContent:
+    } catch (err: any) {
       console.error("[DEBUG] Request Failed:", err);
       const detailedError = err.response
         ? `Server Error (${err.response.status}): ${JSON.stringify(err.response.data)}`
