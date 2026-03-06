@@ -44,7 +44,6 @@ app.post('/identify', async (req: Request, res: Response) => {
 
     try {
         const { email, phoneNumber } = req.body;
-        console.log("[BACKEND] Parsed:", { email, phoneNumber });
 
         // Normalize input
         const rawPhone = (phoneNumber !== undefined && phoneNumber !== null) ? String(phoneNumber) : null;
@@ -77,7 +76,6 @@ app.post('/identify', async (req: Request, res: Response) => {
             },
             orderBy: { createdAt: 'asc' }
         });
-        console.log("[BACKEND] Matching contacts found:", matchingContacts.length);
 
         // If NO matches are found, we create a completely NEW Primary contact
         if (matchingContacts.length === 0) {
@@ -88,7 +86,6 @@ app.post('/identify', async (req: Request, res: Response) => {
                     linkPrecedence: 'primary'
                 }
             });
-            console.log("[BACKEND] Created new Primary contact:", newContact.id);
 
             return res.status(200).json({
                 contact: {
@@ -111,7 +108,6 @@ app.post('/identify', async (req: Request, res: Response) => {
                 primaryIdsSet.add(contact.linkedId);
             }
         }
-        console.log("[BACKEND] Unique Primary IDs identified:", Array.from(primaryIdsSet));
 
         // Fetch all those primary records to sort them by date and find the oldest
         const primaryContacts = await prisma.contact.findMany({
@@ -121,12 +117,10 @@ app.post('/identify', async (req: Request, res: Response) => {
 
         const oldestPrimary = primaryContacts[0];
         const newerPrimaries = primaryContacts.slice(1);
-        console.log("[BACKEND] Result:", { oldestPrimaryId: oldestPrimary.id, newerPrimariesCount: newerPrimaries.length });
 
         // 2. Transform newer primaries (and their linked secondaries) into secondaries of the oldest primary
         if (newerPrimaries.length > 0) {
             for (const p of newerPrimaries) {
-                console.log("[BACKEND] Demoting Primary to Secondary:", p.id, "->", oldestPrimary.id);
                 // Change the newer primary itself into a secondary
                 await prisma.contact.update({
                     where: { id: p.id },

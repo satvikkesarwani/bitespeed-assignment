@@ -111,35 +111,14 @@ export default function App() {
     const isProd = meta.env?.PROD || window.location.hostname !== 'localhost';
     const apiUrl = isProd ? '/identify' : 'http://localhost:3000/identify';
 
-    console.log("[DEBUG] Env Detection:", {
-      hostname: window.location.hostname,
-      isProd,
-      apiUrl,
-      mode: meta.env?.MODE
-    });
-    console.log("[DEBUG] Request Payload:", { email, phoneNumber: combinedPhone });
-
     try {
       const response = await axios.post(apiUrl, {
         email: email || null,
         phoneNumber: combinedPhone
       });
-      console.log("[DEBUG] Server Response Success:", response.data);
       setResult(response.data);
     } catch (err: any) {
-      console.error("[DEBUG] Request Failed (Deep Trace):", err);
-      let errorMsg = "";
-      if (err.response) {
-        // The request was made and the server responded with a status code
-        errorMsg = `Server Error (${err.response.status}): ${JSON.stringify(err.response.data)}`;
-      } else if (err.request) {
-        // The request was made but no response was received
-        errorMsg = `Network Error (No response): The backend at ${apiUrl} did not respond. Check if backend is running on EC2. Hostname: ${window.location.hostname}`;
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        errorMsg = `Request Error: ${err.message}`;
-      }
-      setError(errorMsg);
+      setError(err.response?.data?.error || 'Failed to connect to the server');
     } finally {
       setLoading(false);
     }

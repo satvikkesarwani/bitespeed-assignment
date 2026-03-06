@@ -76,8 +76,10 @@ The core logic is exposed through a single POST endpoint for identity reconcilia
 
 ### Endpoint: `POST /identify`
 
-**Hosted URL**: `[Insert your Render/Deployment URL here]/identify`  
+**Live Deployment**: [http://13.233.94.168/](http://13.233.94.168/)  
 **Local URL**: `http://localhost:3000/identify`
+
+![FluxKart Identity Demo](docs/screenshots/demo.png)
 
 #### Request Body (JSON)
 | Field | Type | Description |
