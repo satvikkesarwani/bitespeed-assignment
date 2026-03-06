@@ -2,7 +2,7 @@
 
 A complete full-stack web service and UI designed to keep track of a customer's identity across multiple purchases by linking different orders made with different contact information (Email and Phone Number) to the same person.
 
-![Frontend Preview](https://via.placeholder.com/800x400.png?text=FluxKart+Identity+Reconciliation+UI)
+
 
 ## Technology Stack
 
